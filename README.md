@@ -17,25 +17,25 @@ user = user
 password = pass
 ```
 ## Local Installation
-####2. install requirements
+#### 2. install requirements
 ```
 pip install -r requirements.txt
 ```
-####3. include Export Sigma Plugin
+#### 3. include Export Sigma Plugin
 ```
 cp exportsigma.py /usr/local/lib/python3.5/site-packages/tulip/native/plugins/exportsigma.py
 ```
-####4. launch api server
+#### 4. launch api server
 ```
 python app.py
 ```
 
 ## Docker Installation
-####3. build
+#### 3. build
 ```
 docker build -t graph-ryder-api .
 ```
-####4. run
+#### 4. run
 ```
 docker run -d -p 5000:5000 --name my-graph-ryder-api graph-ryder-api
 ```
