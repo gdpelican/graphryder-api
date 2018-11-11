@@ -23,6 +23,10 @@ class DrawGraph(Resource):
 
     def get(self, public_gid, layout):
         private_gid = self.gid_stack[public_gid]
+
+        # Dirty hack bug fix
+        layout = 'GEM (Frick)'
+        
         if not os.path.isfile("%s%s.tlp" % (config['exporter']['tlp_path'], private_gid)):
             return makeResponse("Unknow graph id : %s" % public_gid)
         tulip_graph = tlp.loadGraph("%s%s.tlp" % (config['exporter']['tlp_path'], private_gid))
