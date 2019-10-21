@@ -161,7 +161,7 @@ class ImportFromDiscourse(object):
 #        typep = self.graph.getStringProperty('type')
 
         # get list of posts from topic
-        post_url = config['importer_discourse']['abs_path']+config['importer_discourse']['topic_rel_path']+str(id)+".json?api_key="+config['importer_discourse']['admin_api_key']+"&api_username="+config['importer_discourse']['admin_api_username']
+        post_url = config['importer_discourse']['abs_path']+config['importer_discourse']['topic_rel_path']+str(id)+".json?api_key="+config['importer_discourse']['admin_api_key']
         not_ok = True
         while not_ok:
             try:
@@ -187,7 +187,7 @@ class ImportFromDiscourse(object):
             #print(str(len(post_json['post_stream']['stream'])) +' : '+str(i)+' '+str(comment_id))
             if index_post >= len(post_json['post_stream']['posts']):
             # if comment resume is unavailable (not one of the first 20 posts)
-                comment_url = config['importer_discourse']['abs_path']+config['importer_discourse']['posts_rel_path']+str(comment_id)+".json?api_key="+config['importer_discourse']['admin_api_key']+"&api_username="+config['importer_discourse']['admin_api_username']
+                comment_url = config['importer_discourse']['abs_path']+config['importer_discourse']['posts_rel_path']+str(comment_id)+".json?api_key="+config['importer_discourse']['admin_api_key']
                 not_ok = True
                 while not_ok:    
                     try:
@@ -352,7 +352,7 @@ class ImportFromDiscourse(object):
         Continue = True
         page_val = 0
         while Continue:
-            tag_url = config['importer_discourse']['abs_path']+config['importer_discourse']['codes_rel_path']+".json?api_key="+config['importer_discourse']['admin_api_key']+"&api_username="+config['importer_discourse']['admin_api_username']+"&per_page=5000&page="+str(page_val)
+            tag_url = config['importer_discourse']['abs_path']+config['importer_discourse']['codes_rel_path']+".json?api_key="+config['importer_discourse']['admin_api_key']+"&per_page=5000&page="+str(page_val)
             not_ok = True
             while not_ok:
                 try:
@@ -435,7 +435,7 @@ class ImportFromDiscourse(object):
         page_val = 0
         while Continue:
         # get pages of 1000 annotations
-            ann_url = config['importer_discourse']['abs_path']+config['importer_discourse']['annotations_rel_path']+".json?api_key="+config['importer_discourse']['admin_api_key']+"&api_username="+config['importer_discourse']['admin_api_username']+"&discourse_tag="+config['importer_discourse']['tag_focus']+"&per_page=1000&page="+str(page_val)
+            ann_url = config['importer_discourse']['abs_path']+config['importer_discourse']['annotations_rel_path']+".json?api_key="+config['importer_discourse']['admin_api_key']+"&discourse_tag="+config['importer_discourse']['tag_focus']+"&per_page=1000&page="+str(page_val)
             not_ok = True
             while not_ok:
                 try:

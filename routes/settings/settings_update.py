@@ -162,7 +162,9 @@ class HardUpdateFromEdgeRydersDiscourse(Resource):
 
         while Continue:
             print(page_val)
-            cat_url = config['importer_discourse']['abs_path']+config['importer_discourse']['tag_rel_path']+config['importer_discourse']['tag_focus']+".json?api_key="+config['importer_discourse']['admin_api_key']+"&api_username="+config['importer_discourse']['admin_api_username']+"&page="+str(page_val)
+            # TODO: Refactor from cat_url, cat_req, cat_json to tag_*. Because this has everything to do with tags and 
+            # nothing with categories.
+            cat_url = config['importer_discourse']['abs_path']+config['importer_discourse']['tag_rel_path']+config['importer_discourse']['tag_focus']+".json?api_key="+config['importer_discourse']['admin_api_key']+"&page="+str(page_val)
             not_ok = True
             while not_ok:
                 try:
