@@ -373,6 +373,14 @@ class ImportFromDiscourse(object):
             for tag in tag_json:
                 # create tag if not existing
                 if not(tag['id'] in self.existing_elements['tags']):
+
+                    # Take the English code name as its name, ignoring codes without an English name. 
+                    english_name = [i18n_name['name'] for i18n_name in tag['names'] if i18n_name['locale'] == 'en']
+                    if english_name == []:
+                        continue
+                    else:
+                        tag['name'] = english_name[0]
+
                     if not(tag['name'].lower() in self.tags):
                         self.createTag(tag['id'], tag['name'].lower())
                         self.map_tag_to_tag[tag['id']] = tag['id']
