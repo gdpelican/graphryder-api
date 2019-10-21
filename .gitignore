@@ -1,4 +1,4 @@
-# Installation specific files.
+# Installation specific files (config, cached Tulip / JSON data).
 /config.ini
 /data/
 
