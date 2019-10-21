@@ -221,9 +221,15 @@ class UpdateComments(Resource):
 
 class UpdateTags(Resource):
     def get(self):
-        importer = ImportFromJson(False)
-        json_file = json.load(open(config['importer']['json_tags_path']))
-        importer.create_tags(json_file)
+
+        # Original version. @TODO: To be integrated into a generic version.
+        # importer = ImportFromJson(False)
+        # json_file = json.load(open(config['importer']['json_tags_path']))
+        # importer.create_tags(json_file)
+
+        importer = ImportFromDiscourse(True)
+        importer.create_tags()
+
         return makeResponse(importer.end_import(), 200)
 
 
