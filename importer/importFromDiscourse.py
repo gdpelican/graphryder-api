@@ -90,11 +90,15 @@ class ImportFromDiscourse(object):
         Continue = True
         page_val = 0
         while Continue:
-            user_url = config['importer_discourse']['abs_path']+config['importer_discourse']['users_rel_path']+".json?api_key="+config['importer_discourse']['admin_api_key']+"&api_username="+config['importer_discourse']['admin_api_username']+"&per_page=5000&page="+str(page_val)
+            user_url = config['importer_discourse']['abs_path']+config['importer_discourse']['users_rel_path']+".json?api_key="+config['importer_discourse']['admin_api_key']+"&per_page=5000&page="+str(page_val)
+            # The Discource consent.json API requires an "Accept:application/json" header. This requirement 
+            # will be removed once this issue is solved: https://github.com/edgeryders/annotator_store-gem/issues/2
+            headers = {'User-Agent': config['importer_discourse']['user_agent'], 'Accept': 'application/json'}
             not_ok = True
+            # print('user_url = ' + user_url)
             while not_ok:
                 try:
-                    user_req = requests.get(user_url)
+                    user_req = requests.get(user_url, headers=headers)
                 except:
                     print('request problem on user page '+str(page_val))
                     continue
