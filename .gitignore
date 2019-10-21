@@ -3,7 +3,7 @@
 /data/
 
 # Python artifacts (venv with installed packages, compiled files etc.).
-/graphryder-venv/
+/*venv/
 *.pyc
 *.pyo
 __pycache__
