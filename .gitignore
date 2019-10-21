@@ -1,7 +1,23 @@
-.idea/
-__pycache__
-config.ini
+# Installation specific files.
+/config.ini
+/data/
+
+# Python artifacts (venv with installed packages, compiled files etc.).
+/graphryder-venv/
 *.pyc
 *.pyo
-data/
-routes/apidoc/
+__pycache__
+/routes/apidoc/
+
+# IDE software artifacts.
+/.idea/
+/.vscode
+/*.code-workspace
+
+# Files that may be found in webhosting environments.
+/error/
+/stats/
+/robots.txt
+
+# Files that may result from running the server process.
+nohup.out
