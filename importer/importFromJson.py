@@ -33,7 +33,13 @@ class ImportFromJson(object):
     def __init__(self, erase=False, debug=False):
         super(ImportFromJson, self).__init__()
         print('Initializing')
-        self.neo4j_graph = Graph(host=config['neo4j']['url'], user=config['neo4j']['user'], password=config['neo4j']['password'])
+        self.neo4j_graph = Graph(
+            host=config['neo4j']['url'],
+            http_port=int(config['neo4j']['http_port']),
+            bolt_port=int(config['neo4j']['bolt_port']),
+            user=config['neo4j']['user'],
+            password=config['neo4j']['password']
+        )
         if erase:
             self.neo4j_graph.delete_all()
         # else:

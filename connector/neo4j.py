@@ -6,7 +6,7 @@ config.read("config.ini")
 
 # Connect to the database
 driver = GraphDatabase.driver(
-    "bolt://%s" % config['neo4j']['url'],
+    "bolt://%s:%s" % ( config['neo4j']['url'], config['neo4j']['bolt_port'] ),
     auth=basic_auth(config['neo4j']['user'], config['neo4j']['password'])
 )
 
