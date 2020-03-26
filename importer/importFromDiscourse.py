@@ -380,12 +380,9 @@ class ImportFromDiscourse(object):
                 # create tag if not existing
                 if not(tag['id'] in self.existing_elements['tags']):
 
-                    # Take the English code name as its name, ignoring codes without an English name. 
-                    english_name = [i18n_name['name'] for i18n_name in tag['names'] if i18n_name['locale'] == 'en']
-                    if english_name == []:
-                        continue
-                    else:
-                        tag['name'] = english_name[0]
+                    # Use the English code name if available, otherwise the first code name.
+                    english_name = next((tag_name['name'] for tag_name in tag['names'] if tag_name['locale'] == 'en'), '')
+                    tag['name'] = tag['names'][0]['name'] if english_name == '' else english_name
 
                     if not(tag['name'].lower() in self.tags):
                         self.createTag(tag['id'], tag['name'].lower())
