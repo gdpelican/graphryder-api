@@ -230,7 +230,7 @@ class ImportFromDiscourse(object):
             else:
             # else get available resume
                 comment = post_json['post_stream']['posts'][index_post]
-                print('read post ' + str(comment_id) + ' by ' + comment['name']  + ' read among first 20')
+                print('read post ' + str(comment_id) + ' by ' + comment['name'])
 
             if not(comment['user_id'] in self.users):
             # author of the piece of content has not given the authorisation to publish it
