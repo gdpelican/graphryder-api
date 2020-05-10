@@ -121,10 +121,9 @@ class ImportFromDiscourse(object):
             for user in user_json:
                 # create tag if not existing
                 if not(user['id'] in self.users):
-                    print(str(user['id']) + ' is not in self.users')
                     if (config['importer_discourse']['ensure_consent'] == "0"):
                         self.users[user['id']] = user['username']
-                        print(len(self.users))
+                        print(user['username'] + ' added to self.users')
                     else:
                         if (user['edgeryders_consent']=="1"):
                             self.users[user['id']] = user['username']
