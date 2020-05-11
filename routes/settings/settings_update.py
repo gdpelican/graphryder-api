@@ -200,6 +200,11 @@ class HardUpdateFromEdgeRydersDiscourse(Resource):
 
         return makeResponse(importer.end_import(), 200)
 
+class UpdateTagsWithParents(Resource):
+    def get(self):
+        importer = ImportFromDiscourse(False)
+        importer.create_parent_tags()
+        return makeResponse(importer.end_import(), 200)
 
 class UpdateUsers(Resource):
     def get(self):

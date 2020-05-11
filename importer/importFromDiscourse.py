@@ -40,7 +40,9 @@ class ImportFromDiscourse(object):
     unmatch_annotation_user = 0
     unmatch_annotation_tag = 0
     unmatch_annotation_tag_open = 0
+    unmatch_annotation_tag_req = 0
     unmatch_annotation_entity = 0
+    unmatch_annotation_entity_req = 0
 
     def __init__(self, erase=False, debug=False):
         super(ImportFromDiscourse, self).__init__()
@@ -425,6 +427,57 @@ class ImportFromDiscourse(object):
             #         except Exception as e:
             #             print("Query failed: " + req)
                         
+            if len(tag_json) == 5000:
+                page_val += 1
+            else:
+                Continue = False
+                break
+
+    def create_parent_tags(self):
+        print('Import tags')
+        Continue = True
+        page_val = 0
+        while Continue:
+            tag_url = config['importer_discourse']['abs_path']+config['importer_discourse']['codes_rel_path']+".json?api_key="+config['importer_discourse']['admin_api_key']+"&per_page=5000&page="+str(page_val)
+            not_ok = True
+            while not_ok:
+                try:
+                    tag_req = requests.get(tag_url)
+                except:
+                    print('request problem on tag page '+str(page_val))
+                    time.sleep(2)
+                    continue
+                try:
+                    tag_json = tag_req.json()
+                except:
+                    print("failed read tag on page "+str(page_val))
+                    time.sleep(2)
+                    continue
+                not_ok = False
+
+            # ParentTags
+            for tag_entry in tag_json:
+                tag_id_child = int(tag_entry['id'])
+                if 'ancestry' in tag_entry and tag_entry['ancestry'] and tag_entry['ancestry'] != "null":
+                    ancestry = tag_entry['ancestry'].split("/")[-1]
+                    try:
+                        req = "MATCH (t:tag { tag_id : %d }) " % tag_id_child
+                        req += "MATCH (parent:tag { tag_id : %d }) " % int(ancestry)
+                        req += "CREATE UNIQUE (t)-[:IS_CHILD]->(parent) RETURN parent"
+                        query_neo4j(req).single()
+                    except Exception as e:
+                        print("Query failed: " + req)
+
+            # Expand parents
+            try:
+                req = "MATCH (p:tag)<-[:IS_CHILD*1..4]-(c:tag)<-[:REFERS_TO]-(a:annotation)-[:ANNOTATES]->(content) "
+                req += "WITH p, c, a, content "
+                req += "MERGE (p)<-[:REFERS_TO]-(na:annotation {quote: a.quote, timestamp: a.timestamp, child: c.tag_id})-[:ANNOTATES]->(content) "
+                req += "RETURN content, p, c, a"
+                query_neo4j(req).single()
+            except Exception as e:
+                print("Query failed: " + req)
+
             if len(tag_json) == 5000:
                 page_val += 1
             else:
