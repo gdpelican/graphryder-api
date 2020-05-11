@@ -369,7 +369,6 @@ class ImportFromDiscourse(object):
 #        typep[n] = 'tag'
 #        return n
 
-
     def create_tags(self):
         query_neo4j("CREATE CONSTRAINT ON (t:tag) ASSERT t.tag_id IS UNIQUE")
         print('Import tags')
@@ -408,13 +407,23 @@ class ImportFromDiscourse(object):
                         self.tags[tag['name'].lower()] = tag['id']
                     else:
                     # if duplicate using mapping
-#                        tag_n = self.existing_elements['tags'][self.tags[tag['name'].lower()]]
+                    # tag_n = self.existing_elements['tags'][self.tags[tag['name'].lower()]]
                         self.map_tag_to_tag[tag['id']] = self.tags[tag['name'].lower()]
-#                    self.existing_elements['tags'][tag['id']] = tag_n
+                    # self.existing_elements['tags'][tag['id']] = tag_n
                     self.existing_elements['tags'].append(tag['id'])
 
-                # no need to create tag hierarchy as the route does not give ancestry info
-
+            # ParentTags
+            for tag_entry in tag_json:
+                tag_id_child = int(tag_entry['id'])
+                if 'ancestry' in tag_entry and tag_entry['ancestry'] and tag_entry['ancestry'] != "null":
+                    ancestry = tag_entry['ancestry'].split("/")[-1]
+                    try:
+                        req = "MATCH (t:tag { tag_id : %d }) " % tag_id_child
+                        req += "MATCH (parent:tag { tag_id : %d }) " % int(ancestry)
+                        req += "CREATE UNIQUE (t)-[:IS_CHILD]->(parent) RETURN parent"
+                        query_neo4j(req).single()
+                    except Exception as e:
+                        print("Query failed: " + req)
             if len(tag_json) == 5000:
                 page_val += 1
             else:
