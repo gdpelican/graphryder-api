@@ -424,11 +424,12 @@ class ImportFromDiscourse(object):
             #             query_neo4j(req).single()
             #         except Exception as e:
             #             print("Query failed: " + req)
-            # if len(tag_json) == 5000:
-            #     page_val += 1
-            # else:
-            #     Continue = False
-            #     break
+                        
+            if len(tag_json) == 5000:
+                page_val += 1
+            else:
+                Continue = False
+                break
 
 
     def createAnnotation(self, id, quote, timestamp):
