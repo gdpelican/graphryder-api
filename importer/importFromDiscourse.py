@@ -412,23 +412,23 @@ class ImportFromDiscourse(object):
                     # self.existing_elements['tags'][tag['id']] = tag_n
                     self.existing_elements['tags'].append(tag['id'])
 
-            # ParentTags
-            for tag_entry in tag_json:
-                tag_id_child = int(tag_entry['id'])
-                if 'ancestry' in tag_entry and tag_entry['ancestry'] and tag_entry['ancestry'] != "null":
-                    ancestry = tag_entry['ancestry'].split("/")[-1]
-                    try:
-                        req = "MATCH (t:tag { tag_id : %d }) " % tag_id_child
-                        req += "MATCH (parent:tag { tag_id : %d }) " % int(ancestry)
-                        req += "CREATE UNIQUE (t)-[:IS_CHILD]->(parent) RETURN parent"
-                        query_neo4j(req).single()
-                    except Exception as e:
-                        print("Query failed: " + req)
-            if len(tag_json) == 5000:
-                page_val += 1
-            else:
-                Continue = False
-                break
+            # # ParentTags
+            # for tag_entry in tag_json:
+            #     tag_id_child = int(tag_entry['id'])
+            #     if 'ancestry' in tag_entry and tag_entry['ancestry'] and tag_entry['ancestry'] != "null":
+            #         ancestry = tag_entry['ancestry'].split("/")[-1]
+            #         try:
+            #             req = "MATCH (t:tag { tag_id : %d }) " % tag_id_child
+            #             req += "MATCH (parent:tag { tag_id : %d }) " % int(ancestry)
+            #             req += "CREATE UNIQUE (t)-[:IS_CHILD]->(parent) RETURN parent"
+            #             query_neo4j(req).single()
+            #         except Exception as e:
+            #             print("Query failed: " + req)
+            # if len(tag_json) == 5000:
+            #     page_val += 1
+            # else:
+            #     Continue = False
+            #     break
 
 
     def createAnnotation(self, id, quote, timestamp):
