@@ -9,9 +9,9 @@ config.read("config.ini")
 
 
 # todo create a unique Createtlp to avoid code duplication
-class CreateTagFullTlp(object):
+class CreateTagCharFullTlp(object):
     def __init__(self, value, start, end, force_fresh):
-        super(CreateTagFullTlp, self).__init__()
+        super(CreateTagCharFullTlp, self).__init__()
         print('Initializing')
 
         self.neo4j_graph = Graph(
@@ -25,7 +25,13 @@ class CreateTagFullTlp(object):
         self.tulip_graph.setName('opencare - tagToTag')
         # todo pass in parameters labels and colors
         self.labels = ["label", "label", "label"]
-        self.colors = {"user_id": tlp.Color(51,122,183), "post_id": tlp.Color(92,184,92), "comment_id": tlp.Color(240, 173, 78), "tag_id": tlp.Color(200, 10, 10), "edges": tlp.Color(204, 204, 204)}
+        self.colors = { "user_id": tlp.Color(6, 214, 160), 
+                        "post_id": tlp.Color(17, 138, 178), 
+                        "comment_id": tlp.Color(17, 138, 178), 
+                        "tag_id": tlp.Color(229, 245, 255), 
+                        "edges": tlp.Color(204, 204, 204), 
+                        "labels": tlp.Color(239, 71, 111),
+                        "characters": tlp.Color(5, 151, 242)}
         self.filter_occ = value
         self.date_start = start
         self.date_end = end
@@ -79,12 +85,12 @@ class CreateTagFullTlp(object):
 
 
     # def manageLabelEdge(labelEdge,edgeTlp,edgeN4J):
-    # 	labelEdge[edgeTlp] = edgeN4J.type
+    #   labelEdge[edgeTlp] = edgeN4J.type
 
     # def testTransmmission(graph,node):
-    # 	testNul = self.tulip_graph.getIntegerProperty("testNul")
-    # 	strNul = "testNul"
-    # 	exec(strNul)[node] = 1
+    #   testNul = self.tulip_graph.getIntegerProperty("testNul")
+    #   strNul = "testNul"
+    #   exec(strNul)[node] = 1
 
     def create(self, private_gid):
         # Entities properties
@@ -92,7 +98,7 @@ class CreateTagFullTlp(object):
         edgeProperties = {}
         max_occ = 1
 
-        if (not os.path.exists("%s%s.tlp" % (config['exporter']['tlp_path'], "TTT"))) or self.force_fresh == 1:
+        if (not os.path.exists("%s%s.tlp" % (config['exporter']['tlp_path'], "TTTC"))) or self.force_fresh == 1:
             creatorPCT = CreatePostCommentTagTlp(self.date_start, self.date_end, self.force_fresh)
             creatorPCT.create()
             self.tulip_graph = tlp.loadGraph("%s%s.tlp" % (config['exporter']['tlp_path'], "PostCommentTag"))
@@ -107,21 +113,26 @@ class CreateTagFullTlp(object):
             edgeProperties["TagTagSelection"].setAllNodeValue(False)
             edgeProperties["TagTagSelection"].setAllEdgeValue(False)
             edgeProperties["viewLabel"] = self.tulip_graph.getStringProperty("viewLabel")
+            edgeProperties["viewLabelColor"] = self.tulip_graph.getColorProperty("viewLabelColor")
             edgeProperties["type"] = self.tulip_graph.getStringProperty("type")
             edgeProperties["viewColor"] = self.tulip_graph.getColorProperty("viewColor")
             edgeProperties["viewSize"] = self.tulip_graph.getSizeProperty("viewSize")
             edgeProperties['tag_1'] = self.tulip_graph.getStringProperty("tag_1")
             edgeProperties['tag_2'] = self.tulip_graph.getStringProperty("tag_2")
             for t1 in self.tulip_graph.getNodes():
-                t1name = self.tulip_graph.getStringProperty("viewLabel")[t1]
-                if len(t1name) > 3  and t1name.strip()[:3] == '(c)':
-                    self.tulip_graph.delNode(t1)
-                elif entityType[t1] == "tag":
+                t1tagName = self.tulip_graph.getStringProperty("viewLabel")[t1]
+                if entityType[t1] == "tag":
                     edgeProperties["TagTagSelection"][t1] = True
+                    if len(t1tagName) > 3 and t1tagName.strip()[:3] == '(c)':
+                        self.tulip_graph.getColorProperty("viewColor")[t1] = self.colors['characters']
+                    else:
+                        self.tulip_graph.getColorProperty("viewColor")[t1] = self.colors['tag_id']
                     for p in self.tulip_graph.getOutNodes(t1):
                         if entityType[p] == "post" or entityType[p] == "comment":
                             for t2 in self.tulip_graph.getInNodes(p):
                                 if t1 != t2:
+                                    t2tagName = self.tulip_graph.getStringProperty("viewLabel")[t2]
+
                                     e=self.tulip_graph.existEdge(t1, t2, False)
                                     if e.isValid():
                                         edgeProperties["occ"][e] += 1
@@ -141,15 +152,20 @@ class CreateTagFullTlp(object):
                                         edgeProperties["TagTagSelection"][t2] = True
                                         edgeProperties["TagTagSelection"][e] = True
                                         edgeProperties["viewLabel"][e] = "occ ("+str(edgeProperties["occ"][e]/2)+")"
+                                        edgeProperties["viewLabelColor"][e] = self.colors['labels']
                                         labelEdgeTlp[e] = "occ ("+str(edgeProperties["occ"][e]/2)+")"
                                         edgeProperties["type"][e] = "curve"
                                         edgeProperties["viewColor"][e] = self.colors['edges']
                                         edgeProperties['tag_1'][e] = tmpIDNode[t1]
                                         edgeProperties['tag_2'][e] = tmpIDNode[t2]
+
+                                    if len(t1tagName) > 3 and t1tagName.strip()[:3] == '(c)':
+                                        edgeProperties["viewColor"][e] = self.colors['characters']
+
             sg = self.tulip_graph.addSubGraph(edgeProperties["TagTagSelection"])
-            tlp.saveGraph(sg, "%s%s.tlp" % (config['exporter']['tlp_path'], "TTT"))
+            tlp.saveGraph(sg, "%s%s.tlp" % (config['exporter']['tlp_path'], "TTTC"))
         else:
-            sg = tlp.loadGraph("%s%s.tlp" % (config['exporter']['tlp_path'], "TTT"))
+            sg = tlp.loadGraph("%s%s.tlp" % (config['exporter']['tlp_path'], "TTTC"))
             edgeProperties["occ"] = sg.getIntegerProperty("occ")
             max_occ = edgeProperties["occ"].getNodeMax()
 

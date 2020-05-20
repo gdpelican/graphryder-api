@@ -26,7 +26,7 @@ class DrawGraph(Resource):
         if not os.path.isfile("%s%s.tlp" % (config['exporter']['tlp_path'], private_gid)):
             return makeResponse("Unknow graph id : %s" % public_gid)
         tulip_graph = tlp.loadGraph("%s%s.tlp" % (config['exporter']['tlp_path'], private_gid))
-        tulip_graph.applyLayoutAlgorithm(layout)
+        tulip_graph.applyLayoutAlgorithm('GEM (Frick)')
         path = tempfile.mkstemp()
         ds = tlp.getDefaultPluginParameters("SIGMA JSON Export", tulip_graph)
         tlp.exportGraph("SIGMA JSON Export", tulip_graph, path[1], ds)

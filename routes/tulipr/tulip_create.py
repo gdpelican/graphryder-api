@@ -11,6 +11,7 @@ from graphtulip.createtagtlp import CreateTagTlp
 from graphtulip.createtagdatetlp import CreateTagDateTlp
 from graphtulip.createtagfocustlp import CreateTagFocusTlp
 from graphtulip.createtagfulltlp import CreateTagFullTlp
+from graphtulip.createtagcharfulltlp import CreateTagCharFullTlp
 
 config = configparser.ConfigParser()
 config.read("config.ini")
@@ -103,6 +104,18 @@ class GenerateTagFullGraph(Resource):
         self.gid_stack.update({"tagToTags": private_gid})
         return makeResponse(True)
 
+class GenerateTagCharFullGraph(Resource):
+    def __init__(self, **kwargs):
+        self.gid_stack = kwargs['gid_stack']
+
+    def get(self, value, start, end, force_fresh):
+        if 'tagToTagsChar' in self.gid_stack.keys():
+            os.remove('%s%s.tlp' % (config['exporter']['tlp_path'], self.gid_stack.pop("tagToTagsChar")))
+        private_gid = uuid.uuid4().urn[9:]
+        creator = CreateTagCharFullTlp(value, start, end, force_fresh)
+        creator.create(private_gid)
+        self.gid_stack.update({"tagToTagsChar": private_gid})
+        return makeResponse(True)
 
 class GenerateGraphWithoutUser(Resource):
     def __init__(self, **kwargs):
