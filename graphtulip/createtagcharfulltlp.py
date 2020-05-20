@@ -28,10 +28,10 @@ class CreateTagCharFullTlp(object):
         self.colors = { "user_id": tlp.Color(6, 214, 160), 
                         "post_id": tlp.Color(17, 138, 178), 
                         "comment_id": tlp.Color(17, 138, 178), 
-                        "tag_id": tlp.Color(229, 245, 255), 
-                        "edges": tlp.Color(204, 204, 204), 
+                        "tag_id": tlp.Color(251, 175, 0), 
+                        "edges": tlp.Color(255, 214, 57), 
                         "labels": tlp.Color(239, 71, 111),
-                        "characters": tlp.Color(5, 151, 242)}
+                        "characters": tlp.Color(0, 124, 190)}
         self.filter_occ = value
         self.date_start = start
         self.date_end = end
@@ -121,7 +121,9 @@ class CreateTagCharFullTlp(object):
             edgeProperties['tag_2'] = self.tulip_graph.getStringProperty("tag_2")
             for t1 in self.tulip_graph.getNodes():
                 t1tagName = self.tulip_graph.getStringProperty("viewLabel")[t1]
-                if entityType[t1] == "tag":
+                if len(t1tagName) > 3  and t1tagName.strip()[:3] == '(a)':
+                    self.tulip_graph.delNode(t1)
+                elif entityType[t1] == "tag":
                     edgeProperties["TagTagSelection"][t1] = True
                     if len(t1tagName) > 3 and t1tagName.strip()[:3] == '(c)':
                         self.tulip_graph.getColorProperty("viewColor")[t1] = self.colors['characters']

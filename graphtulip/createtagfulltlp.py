@@ -116,6 +116,8 @@ class CreateTagFullTlp(object):
                 t1name = self.tulip_graph.getStringProperty("viewLabel")[t1]
                 if len(t1name) > 3  and t1name.strip()[:3] == '(c)':
                     self.tulip_graph.delNode(t1)
+                elif len(t1name) > 3  and t1name.strip()[:3] == '(a)':
+                    self.tulip_graph.delNode(t1)
                 elif entityType[t1] == "tag":
                     edgeProperties["TagTagSelection"][t1] = True
                     for p in self.tulip_graph.getOutNodes(t1):
