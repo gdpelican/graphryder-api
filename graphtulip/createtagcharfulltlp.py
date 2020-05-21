@@ -28,10 +28,10 @@ class CreateTagCharFullTlp(object):
         self.colors = { "user_id": tlp.Color(6, 214, 160), 
                         "post_id": tlp.Color(17, 138, 178), 
                         "comment_id": tlp.Color(17, 138, 178), 
-                        "tag_id": tlp.Color(251, 175, 0), 
+                        "tag_id": tlp.Color(255, 159, 28), 
                         "edges": tlp.Color(255, 214, 57), 
                         "labels": tlp.Color(239, 71, 111),
-                        "characters": tlp.Color(0, 124, 190)}
+                        "characters": tlp.Color(231, 29, 54)}
         self.filter_occ = value
         self.date_start = start
         self.date_end = end
