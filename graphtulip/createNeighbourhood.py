@@ -1,5 +1,4 @@
 from tulip import *
-from py2neo import *
 import time
 import configparser
 import os

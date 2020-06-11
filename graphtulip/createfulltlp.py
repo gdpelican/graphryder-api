@@ -2,7 +2,6 @@ import configparser
 import uuid
 from connector.redisgraph import query_redisgraph
 from tulip import *
-from py2neo import *
 
 config = configparser.ConfigParser()
 config.read("config.ini")

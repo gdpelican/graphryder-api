@@ -1,5 +1,4 @@
 from tulip import *
-from py2neo import *
 from connector.redisgraph import query_redisgraph
 import configparser
 import os
