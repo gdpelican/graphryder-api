@@ -1,6 +1,5 @@
 from flask_restful import Resource, reqparse
-from neo4j.v1 import SessionError
-from connector import neo4j
+from connector.redisgraph import query_redisgraph
 from routes.utils import addargs, addTimeFilter, makeResponse
 import datetime
 
@@ -8,7 +7,7 @@ parser = reqparse.RequestParser()
 
 class GetPost(Resource):
     def get(self, post_id):
-        result = neo4j.query_neo4j("MATCH (find:post {post_id: %d}) RETURN find" % post_id)
+        result = query_redisgraph("MATCH (find:post {post_id: %d}) RETURN find" % post_id)
         try:
             return makeResponse(result.single()['find'].properties, 200)
         except ResultError:
@@ -22,7 +21,7 @@ class GetPostHydrate(Resource): # todo comments on comments (with author)
         req += "OPTIONAL MATCH (find)<-[:COMMENTS]-(comment:comment) "
         req += "OPTIONAL MATCH (comment)<-[:AUTHORSHIP]-(commentAuthor:user) "
         req += "RETURN find, author, comment, commentAuthor ORDER BY comment.timestamp DESC"
-        result = neo4j.query_neo4j(req)
+        result = query_redisgraph(req)
         comments = []
         author = None
         for record in result:
@@ -43,12 +42,12 @@ class GetPostHydrate(Resource): # todo comments on comments (with author)
         req += "OPTIONAL MATCH (find)<-[:ANNOTATES]-(a:annotation) "
         req += "OPTIONAL MATCH (a)-[:REFERS_TO]->(t:tag) "
         req += "RETURN a.annotation_id as annotation_id, a.timestamp as annotation_timestamp, t.tag_id as tag_id, t.label as tag_label ORDER BY a.timestamp DESC"
-        result = neo4j.query_neo4j(req)
+        result = query_redisgraph(req)
         annotations = []
         annotations_id = []
         tags_id = []
         for record in result:
-            annotation = {} 
+            annotation = {}
             try:
                 if record['tag_id'] and record['annotation_id'] not in annotations_id:
                     if record['annotation_id']:
@@ -70,10 +69,10 @@ class GetPostHydrate(Resource): # todo comments on comments (with author)
         req = "MATCH (p: post {post_id: %d}) <-[:COMMENTS]- (c: comment) " %post_id
         req += "MATCH (c) <-[:ANNOTATES]-(a)-[:REFERS_TO]->(t: tag) "
         req += "RETURN t.tag_id as tag_id, t.label as tag_label, c.comment_id as comment_id, c.label as comment_label ORDER BY c.timestamp DESC"
-        result = neo4j.query_neo4j(req)
+        result = query_redisgraph(req)
         innovations = []
         for record in result:
-            innovation = {} 
+            innovation = {}
             try:
                 if record['tag_id'] and record['tag_id'] not in tags_id:
                     if record['tag_id']:
@@ -103,7 +102,7 @@ class GetPosts(Resource):
     def get(self):
         req = "MATCH (p:post)<-[:AUTHORSHIP]-(u:user) RETURN p.post_id AS post_id, p.title AS title, p.content AS content, p.timestamp AS timestamp, u.user_id AS user_id"
         req += addargs()
-        result = neo4j.query_neo4j(req)
+        result = query_redisgraph(req)
         posts = []
         for record in result:
             fmt_time = datetime.datetime.fromtimestamp(record['timestamp']/1000).strftime('%Y-%m-%d %H:%M:%S')
@@ -113,7 +112,7 @@ class GetPosts(Resource):
 class GetPostsLatest(Resource):
     def get(self):
         req = "MATCH (p:post) <-[:AUTHORSHIP]- (u: user) RETURN p.post_id AS post_id,p.label AS post_label, u.user_id AS user_id, u.label AS user_label, p.timestamp AS timestamp ORDER BY timestamp DESC LIMIT 5"
-        result = neo4j.query_neo4j(req)
+        result = query_redisgraph(req)
         posts = []
         for record in result:
             posts.append({'post_id': record['post_id'], "post_label": record['post_label'], "user_id": record['user_id'], "user_label": record['user_label'], "timestamp": record['timestamp']})
@@ -124,7 +123,7 @@ class GetPostsByType(Resource):
     def get(self, post_type):
         req = "MATCH (find:post {type: '%s'}) RETURN find" % post_type
         req += addargs()
-        result = neo4j.query_neo4j(req)
+        result = query_redisgraph(req)
         posts = []
         for record in result:
             posts.append(record['find'].properties)
@@ -135,7 +134,7 @@ class GetPostsByAuthor(Resource):
     def get(self, author_id):
         req = "MATCH (author:user {user_id: %d})-[:AUTHORSHIP]->(p:post) RETURN p" % author_id
         req += addargs()
-        result = neo4j.query_neo4j(req)
+        result = query_redisgraph(req)
         posts = []
         for record in result:
             posts.append(record['p'].properties)
@@ -159,7 +158,7 @@ class GetPostType(Resource):
             req = "MATCH (n:post_type)<-[r:TYPE_IS]-(p:post) "
             req += addTimeFilter()
             req += "RETURN n, count(r) AS nb_posts"
-        result = neo4j.query_neo4j(req)
+        result = query_redisgraph(req)
         labels = []
         data = [[]]
         if args['uid']:

@@ -3,6 +3,7 @@ from py2neo import *
 import time
 import configparser
 import os
+from connector.redisgraph import query_redisgraph
 from graphtulip.createPostCommentTagTlp import CreatePostCommentTagTlp
 
 config = configparser.ConfigParser()
@@ -15,13 +16,6 @@ class CreateNeighbourhood(object):
         super(CreateNeighbourhood, self).__init__()
         print('Initializing')
 
-        self.neo4j_graph = Graph(
-            host=config['neo4j']['url'],
-            http_port=int(config['neo4j']['http_port']),
-            bolt_port=int(config['neo4j']['bolt_port']),
-            user=config['neo4j']['user'],
-            password=config['neo4j']['password']
-        )
         self.tulip_graph = tlp.newGraph()
         self.tulip_graph.setName('opencare - neighbourhood')
         # todo pass in parameters labels and colors
@@ -118,7 +112,7 @@ class CreateNeighbourhood(object):
             #req+= "WHERE e.timestamp >= %d AND e.timestamp <= %d " % (self.date_start, self.date_end)
             #req+= "AND c.timestamp >= %d AND c.timestamp <= %d " % (self.date_start, self.date_end)
             req+= "RETURN c.comment_id AS src_id, c AS src, CASE e.post_id WHEN null THEN e.comment_id ELSE e.post_id END AS tgt_id, CASE e.post_id WHEN null THEN 'comment' ELSE 'post' END AS tgt_entity_type, e AS tgt"
-            result = self.neo4j_graph.run(req)
+            result = query_redisgraph(req)
 
             # Get the posts
             print("Connecting...")
@@ -168,7 +162,7 @@ class CreateNeighbourhood(object):
     # Prepare tags and posts request
             req = "MATCH (t:tag)<-[:REFERS_TO]-(a:annotation)-[:ANNOTATES]->(e: post) "
             req+= "RETURN t.tag_id, e.post_id, t, e, count(t) as strength"
-            result = self.neo4j_graph.run(req)
+            result = query_redisgraph(req)
 
             # Get the posts
             print("Read Posts")
@@ -194,7 +188,7 @@ class CreateNeighbourhood(object):
             # Prepare tags and comments request
             req = "MATCH (t:tag)<-[:REFERS_TO]-(a:annotation)-[:ANNOTATES]->(e: comment) "
             req+= "RETURN t.tag_id, e.comment_id, t, e, count(t) as strength"
-            result = self.neo4j_graph.run(req)
+            result = query_redisgraph(req)
 
             # Get the comments
             print("Read Comments")
@@ -252,5 +246,3 @@ class CreateNeighbourhood(object):
 
         print("Export")
         tlp.saveGraph(sg, "%s%s.tlp" % (config['exporter']['tlp_path'], private_gid))
-
-

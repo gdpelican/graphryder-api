@@ -1,13 +1,12 @@
 from flask_restful import Resource, reqparse
-from neo4j.v1 import SessionError
-from connector import neo4j
+from connector.redisgraph import query_redisgraph
 from routes.utils import addargs, addTimeFilter, makeResponse
 
 parser = reqparse.RequestParser()
 
 class GetTag(Resource):
     def get(self, tag_id):
-        result = neo4j.query_neo4j("MATCH (find:tag {tag_id: %d}) RETURN find" % tag_id)
+        result = query_redisgraph("MATCH (find:tag {tag_id: %d}) RETURN find" % tag_id)
         try:
             return makeResponse(result.single()['find'].properties, 200)
         except ResultError:
@@ -17,16 +16,16 @@ class GetTags(Resource):
     def get(self):
         req = "MATCH (t:tag) RETURN t.tag_id AS tag_id, t.label AS label"
         req += addargs()
-        result = neo4j.query_neo4j(req)
+        result = query_redisgraph(req)
         tags = []
         for record in result:
             tags.append({'tag_id': record['tag_id'], "label": record['label']})
         return makeResponse(tags, 200)
-        
+
 class GetTagsByParent(Resource):
     def get(self, parent_tag_id):
         req = "MATCH (parent:tag {tag_id : %d})<-[:IS_CHILD]-(child:tag) RETURN child" % parent_tag_id
-        result = neo4j.query_neo4j(req)
+        result = query_redisgraph(req)
         tags = []
         for record in result:
             tags.append(record['child'].properties)
@@ -46,7 +45,7 @@ class GetTagHydrate(Resource):
     def get(self, tag_id):
         # Get tag node
         req = "MATCH (find:tag {tag_id: %d}) RETURN find" % tag_id
-        result = neo4j.query_neo4j(req)
+        result = query_redisgraph(req)
         tag = result.single()['find'].properties
         # Get annotation's posts
         req = "MATCH (find:tag {tag_id: %d})" % tag_id
@@ -54,7 +53,7 @@ class GetTagHydrate(Resource):
         req += " MATCH (a)-[:ANNOTATES]->(p:post)"
         req += ' MATCH (p)<-[:AUTHORSHIP]-(u:user)'
         req += ' RETURN a.annotation_id AS annotation_id, a.timestamp AS annotation_timestamp, p.post_id as post_id, p.title as post_title, p.timestamp as post_timestamp, u.user_id as user_id, u.label as user_name ORDER BY post_timestamp DESC'
-        result = neo4j.query_neo4j(req)
+        result = query_redisgraph(req)
         annotations_posts = []
         annotations_posts_id = []
 
@@ -78,7 +77,7 @@ class GetTagHydrate(Resource):
         req += " MATCH (a)-[:ANNOTATES]->(c:comment)"
         req += ' MATCH (c)<-[:AUTHORSHIP]-(u:user)'
         req += ' RETURN a.annotation_id AS annotation_id, a.timestamp AS annotation_timestamp, c.comment_id as comment_id, c.title as comment_title, c.timestamp as comment_timestamp, u.user_id as user_id, u.label as user_name ORDER BY comment_timestamp DESC'
-        result = neo4j.query_neo4j(req)
+        result = query_redisgraph(req)
         annotations_comments = []
         annotations_comments_id = []
 
@@ -104,4 +103,3 @@ class GetTagHydrate(Resource):
         tag['posts'] = annotations_posts
         tag['comments'] = annotations_comments
         return makeResponse(tag, 200)
-

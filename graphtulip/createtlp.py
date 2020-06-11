@@ -1,5 +1,6 @@
 from tulip import *
 from py2neo import *
+from connector.redisgraph import query_redisgraph
 import configparser
 
 config = configparser.ConfigParser()
@@ -11,13 +12,6 @@ class CreateTlp(object):
         super(CreateTlp, self).__init__()
         print('Initializing')
 
-        self.neo4j_graph = Graph(
-            host=config['neo4j']['url'],
-            http_port=int(config['neo4j']['http_port']),
-            bolt_port=int(config['neo4j']['bolt_port']),
-            user=config['neo4j']['user'],
-            password=config['neo4j']['password']
-        )
         self.tulip_graph = tlp.newGraph()
         self.tulip_graph.setName('opencare')
 
@@ -60,7 +54,7 @@ class CreateTlp(object):
 
     def createNodes(self, req):
         # Expected Format :  RETURN ID(n),n
-        result = self.neo4j_graph.run(req)
+        result = query_redisgraph(req)
         for qr in result:
             if not qr[0] in self.indexNodes:
                 n = self.tulip_graph.addNode()
@@ -73,7 +67,7 @@ class CreateTlp(object):
     def createEdges(self, req):
         # Expected Format : RETURN ID(e),ID(n1),ID(n2),n2,e
         # If n2 not exist it will be create
-        result = self.neo4j_graph.run(req)
+        result = query_redisgraph(req)
         for qr in result:
             # add new nodes
             if not qr[2] in self.indexNodes:
@@ -194,7 +188,7 @@ class CreateTlp(object):
         tag_associate_req += "RETURN ID(content), COLLECT(DISTINCT t.tag_id)"
 
         self.nodeProperties["tagsAssociateNodeTlp"] = self.tulip_graph.getIntegerVectorProperty("tagsAssociateNodeTlp")
-        result = self.neo4j_graph.run(tag_associate_req)
+        result = query_redisgraph(tag_associate_req)
         for qr in result:
             self.nodeProperties["tagsAssociateNodeTlp"][self.indexNodes[qr[0]]] = qr[1]
 
@@ -203,7 +197,7 @@ class CreateTlp(object):
         user_associate_req += "RETURN ID(content), COLLECT(DISTINCT n.user_id)"
 
         self.nodeProperties["usersAssociateNodeTlp"] = self.tulip_graph.getIntegerVectorProperty("usersAssociateNodeTlp")
-        result = self.neo4j_graph.run(user_associate_req)
+        result = query_redisgraph(user_associate_req)
         for qr in result:
             self.nodeProperties["usersAssociateNodeTlp"][self.indexNodes[qr[0]]] = qr[1]
 

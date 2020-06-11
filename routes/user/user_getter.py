@@ -1,6 +1,5 @@
 from flask_restful import Resource
-from neo4j.v1 import SessionError
-from connector import neo4j
+from connector.redisgraph import query_redisgraph
 from routes.utils import addargs, makeResponse
 
 
@@ -16,7 +15,7 @@ class GetUser(Resource):
     """
     def get(self, user_id):
         req = "MATCH (find:user {user_id: %d}) RETURN find" % user_id
-        result = neo4j.query_neo4j(req)
+        result = query_redisgraph(req)
         try:
             return makeResponse(result.single()['find'].properties, 200)
         except ResultError:
@@ -37,13 +36,13 @@ class GetUserHydrate(Resource):
     def get(self, user_id):
         # Get user properties
         req = "MATCH (find:user {user_id: %d}) RETURN find" % user_id
-        result = neo4j.query_neo4j(req)
+        result = query_redisgraph(req)
         user = result.single()['find'].properties
         # Get user's posts
         req = "MATCH (find:user {user_id: %d})" % user_id
         req += " MATCH (find)-[:AUTHORSHIP]->(p:post)"
         req += ' RETURN p.post_id AS post_id, p.label AS post_label, p.timestamp AS timestamp ORDER BY p.timestamp DESC'
-        result = neo4j.query_neo4j(req)
+        result = query_redisgraph(req)
         posts = []
         posts_id = []
 
@@ -63,7 +62,7 @@ class GetUserHydrate(Resource):
         req += " MATCH (find)-[:AUTHORSHIP]->(c:comment)"
         req += " OPTIONAL MATCH (c)-[:COMMENTS]->(p:post)"
         req += ' RETURN c.comment_id AS comment_id, c.label AS comment_label, c.timestamp AS timestamp, p.post_id AS comment_parent_post_id, p.label AS comment_parent_post_label ORDER BY c.timestamp DESC'
-        result = neo4j.query_neo4j(req)
+        result = query_redisgraph(req)
         comments_id = []
         comments = []
 
@@ -105,7 +104,7 @@ class GetUsers(Resource):
     def get(self):
         req = "MATCH (n:user) RETURN n.user_id AS user_id, n.label AS label"
         req += addargs()
-        result = neo4j.query_neo4j(req)
+        result = query_redisgraph(req)
         users = []
         for record in result:
             users.append({'user_id': record['user_id'], "label": record['label']})

@@ -1,5 +1,6 @@
 import configparser
 import uuid
+from connector.redisgraph import query_redisgraph
 from tulip import *
 from py2neo import *
 
@@ -12,13 +13,6 @@ class CreateFullTlp(object):
         super(CreateFullTlp, self).__init__()
         print('Initializing')
 
-        self.neo4j_graph = Graph(
-            host=config['neo4j']['url'],
-            http_port=int(config['neo4j']['http_port']),
-            bolt_port=int(config['neo4j']['bolt_port']),
-            user=config['neo4j']['user'],
-            password=config['neo4j']['password']
-        )
         self.tulip_graph = tlp.newGraph()
         self.tulip_graph.setName('opencare')
         # todo pass in parameters labels and colors
@@ -131,9 +125,9 @@ class CreateFullTlp(object):
         edges_req = "MATCH (n1)-[e]->(n2) "
         edges_req += "RETURN ID(e),ID(n1),ID(n2),n2,e"
 
-        # Get the nodes of Neo4J
+        # Get the nodes of the graphDB
         print("Read Nodes")
-        result = self.neo4j_graph.run(nodes_req)
+        result = query_redisgraph(nodes_req)
         for qr in result:
             n = self.tulip_graph.addNode()
             self.managePropertiesEntity(n, qr[1], nodeProperties)
@@ -142,9 +136,9 @@ class CreateFullTlp(object):
             # keep the reference for edges creation
             indexNodes[qr[0]] = n
 
-        # Get the edges of Neo4J
+        # Get the edges of the graphDB
         print("Read Edges")
-        result = self.neo4j_graph.run(edges_req)
+        result = query_redisgraph(edges_req)
         for qr in result:
             if qr[1] in indexNodes and qr[2] in indexNodes:
                 e = self.tulip_graph.addEdge(indexNodes[qr[1]], indexNodes[qr[2]])
@@ -159,4 +153,3 @@ class CreateFullTlp(object):
 
         print("Export")
         tlp.saveGraph(self.tulip_graph, "%s%s.tlp" % (config['exporter']['tlp_path'], private_gid))
-
