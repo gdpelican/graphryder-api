@@ -4,7 +4,7 @@ config = configparser.ConfigParser()
 config.read("config.ini")
 
 def query_redisgraph(query):
-    result = requests.get(
+    result = requests.post(
         f'{config['discourse']['url']}/graphryder/query',
         headers={
             'Content-Type': 'application/json',
