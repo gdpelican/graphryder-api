@@ -97,15 +97,15 @@ class CreateTlp(object):
             field, value = param
             # Prepare node request
             node_req = "MATCH (n { %s : %s}) RETURN ID(n),n" % (field, value)
-            # Get the nodes of Neo4J
+            # Get the nodes of graphDB
             self.createNodes(node_req)
-            # Request neighboors of main nodes
+            # Request neighbors of main nodes
             edges_req = "MATCH (n1 {%s : %s})-[e]-(n2) " % (field, value)
             edges_req += "WHERE NOT (n1)-[e:CREATED_ON]-(n2) "
             edges_req += "AND NOT (n1)-[e:POST_ON]-(n2) "
             edges_req += "AND NOT (n1)-[e:GROUP_IS]-(n2) "
             edges_req += "RETURN ID(e),ID(n1),ID(n2),n2,e"
-            # Get the edges of Neo4J
+            # Get the edges of graphDB
             print("Read Edges")
             self.createEdges(edges_req)
 
@@ -142,7 +142,7 @@ class CreateTlp(object):
         node_req += "AND NOT (n:TimeTreeRoot) "
         node_req += "RETURN ID(n),n"
 
-        # Get the nodes of Neo4J
+        # Get the nodes of graphDB
         self.createNodes(node_req)
 
         # Request edges
@@ -178,7 +178,7 @@ class CreateTlp(object):
         edges_req += "AND NOT (n2:TimeTreeRoot) "
         edges_req += "RETURN ID(e),ID(n1),ID(n2),n2,e"
 
-        # Get the edges of Neo4J
+        # Get the edges of graphDB
         print("Read Edges")
         self.createEdges(edges_req)
 
