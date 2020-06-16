@@ -1,5 +1,5 @@
 from tulip import *
-from py2neo import *
+from connector.redisgraph import query_redisgraph
 import configparser
 
 config = configparser.ConfigParser()
@@ -12,13 +12,6 @@ class CreateTagDateTlp(object):
         super(CreateTagDateTlp, self).__init__()
         print('Initializing')
 
-        self.neo4j_graph = Graph(
-            host=config['neo4j']['url'],
-            http_port=int(config['neo4j']['http_port']),
-            bolt_port=int(config['neo4j']['bolt_port']),
-            user=config['neo4j']['user'],
-            password=config['neo4j']['password']
-        )
         self.tulip_graph = tlp.newGraph()
         self.tulip_graph.setName('opencare - tagToTag')
         # todo pass in parameters labels and colors
@@ -98,7 +91,7 @@ class CreateTagDateTlp(object):
         max_occ = 1
 
         req = "MATCH (t1: tag {tag_id: %d}) RETURN t1.tag_id, t1" % self.tag_id_src
-        result = self.neo4j_graph.run(req)
+        result = query_redisgraph(req)
 
         for qr in result:
             focus_node = self.tulip_graph.addNode()
@@ -116,7 +109,7 @@ class CreateTagDateTlp(object):
         req+= "WHERE t1<>t2 AND a1<>a2 AND t1 <> t2 AND e.timestamp >= %d AND e.timestamp <= %d " % (self.date_start, self.date_end)
         req+= "RETURN t1.tag_id, t2.tag_id, t1.label, t2.label, count(t1) as weight"
         #req = "MATCH (t1: tag {tag_id: %d})--(a1: annotation)-[:ANNOTATES]->(e:post)<-[:ANNOTATES]-(a2: annotation)--(t2: tag) WHERE t1 <> t2 RETURN ID(t1), ID(t2), t1, t2, count(t1) as weight" % self.tag_id_src
-        result = self.neo4j_graph.run(req)
+        result = query_redisgraph(req)
 
         entProperties["viewLabel"] = self.tulip_graph.getStringProperty("viewLabel")
         entProperties["type"] = self.tulip_graph.getStringProperty("type")
@@ -126,7 +119,7 @@ class CreateTagDateTlp(object):
         entProperties["tag_2"] = self.tulip_graph.getStringProperty("tag_2")
         entProperties["label_2"] = self.tulip_graph.getStringProperty("label_2")
         # Get the edges #  RETURN ID(t1), ID(t2), t1, t2, count(t1) as weight
-        result = self.neo4j_graph.run(req)
+        result = query_redisgraph(req)
         for qr in result:
             n = self.tulip_graph.addNode()
             tmpIDNode[n] = qr[1]
@@ -135,7 +128,7 @@ class CreateTagDateTlp(object):
             entProperties["viewLabel"][n] = str(qr[3])
             entProperties["viewColor"][n] = self.colors['tag_id']
             entProperties["tag_id"][n] = str(qr[1])
-            max_occ = max(qr[4], max_occ) 
+            max_occ = max(qr[4], max_occ)
             if qr[0] in indexNodes and qr[1] in indexNodes:
                 e = self.tulip_graph.addEdge(indexNodes[qr[0]], indexNodes[qr[1]])
                 entProperties["viewLabel"][e] = "REFERS_TO ("+str(qr[4])+")"
@@ -154,12 +147,10 @@ class CreateTagDateTlp(object):
             n = self.tulip_graph.target(e)
             entProperties["occ"][n] = int(tmp_val)
             #entProperties["viewSize"][n] = tlp.Size(self.nb_step,self.nb_step,self.nb_step)
-            
-            
+
+
         entProperties["occ"][focus_node] = -1
 #        entProperties["viewSize"][n] = tlp.Size(tmp_val, tmp_val, tmp_val)
 
         print("Export")
         tlp.saveGraph(self.tulip_graph, "%s%s.tlp" % (config['exporter']['tlp_path'], private_gid))
-
-

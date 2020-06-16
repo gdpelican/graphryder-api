@@ -1,5 +1,5 @@
 from tulip import *
-from py2neo import *
+from connector.redisgraph import query_redisgraph
 import configparser
 import os
 
@@ -13,13 +13,6 @@ class CreatePostCommentTagTlp(object):
         super(CreatePostCommentTagTlp, self).__init__()
         print('Initializing')
 
-        self.neo4j_graph = Graph(
-            host=config['neo4j']['url'],
-            http_port=int(config['neo4j']['http_port']),
-            bolt_port=int(config['neo4j']['bolt_port']),
-            user=config['neo4j']['user'],
-            password=config['neo4j']['password']
-        )
         self.tulip_graph = tlp.newGraph()
         self.tulip_graph.setName('opencare - PostCommentTag')
         # todo pass in parameters labels and colors
@@ -99,7 +92,7 @@ class CreatePostCommentTagTlp(object):
             req = "MATCH (t:tag)<-[:REFERS_TO]-(a:annotation)-[:ANNOTATES]->(e: post) "
             req+= "WHERE e.timestamp >= %d AND e.timestamp <= %d " % (self.date_start, self.date_end)
             req+= "RETURN t.tag_id, e.post_id, t, e, count(t) as strength"
-            result = self.neo4j_graph.run(req)
+            result = query_redisgraph(req)
 
             # Get the posts
             print("Read Posts")
@@ -125,7 +118,7 @@ class CreatePostCommentTagTlp(object):
             req = "MATCH (t:tag)<-[:REFERS_TO]-(a:annotation)-[:ANNOTATES]->(e: comment) "
             req+= "WHERE e.timestamp >= %d AND e.timestamp <= %d " % (self.date_start, self.date_end)
             req+= "RETURN t.tag_id, e.comment_id, t, e, count(t) as strength"
-            result = self.neo4j_graph.run(req)
+            result = query_redisgraph(req)
 
             # Get the comments
             print("Read Comments")
@@ -154,7 +147,7 @@ class CreatePostCommentTagTlp(object):
 
             #add user array as node property
             nodeProperties["usersAssociateNodeTlp"] = self.tulip_graph.getIntegerVectorProperty("usersAssociateNodeTlp")
-            result = self.neo4j_graph.run(user_associate_req)
+            result = query_redisgraph(user_associate_req)
             for qr in result:
                 nodeProperties["usersAssociateNodeTlp"][indexTags[qr[0]]] = qr[1]
 
@@ -165,7 +158,7 @@ class CreatePostCommentTagTlp(object):
 
             #add post and comment array as node property
             nodeProperties["postsOrCommentsAssociateNodeTlp"] = self.tulip_graph.getIntegerVectorProperty("postsOrCommentsAssociateNodeTlp")
-            result = self.neo4j_graph.run(postOrComment_associate_req)
+            result = query_redisgraph(postOrComment_associate_req)
             for qr in result:
                 if qr[0] in indexTags:
                     nodeProperties["postsOrCommentsAssociateNodeTlp"][indexTags[qr[0]]] = qr[1]

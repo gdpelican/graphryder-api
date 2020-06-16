@@ -1,5 +1,5 @@
 from tulip import *
-from py2neo import *
+from connector.redisgraph import query_redisgraph
 import configparser
 
 config = configparser.ConfigParser()
@@ -12,13 +12,6 @@ class CreateTagFocusTlp(object):
         super(CreateTagFocusTlp, self).__init__()
         print('Initializing')
 
-        self.neo4j_graph = Graph(
-            host=config['neo4j']['url'],
-            http_port=int(config['neo4j']['http_port']),
-            bolt_port=int(config['neo4j']['bolt_port']),
-            user=config['neo4j']['user'],
-            password=config['neo4j']['password']
-        )
         self.tulip_graph = tlp.newGraph()
         self.tulip_graph.setName('opencare - tagToTag')
         # todo pass in parameters labels and colors
@@ -103,7 +96,7 @@ class CreateTagFocusTlp(object):
         req = "MATCH (t:tag)<-[:REFERS_TO]-(a:annotation)-[:ANNOTATES]->(e: post) "
         req+= "WHERE e.timestamp >= %d AND e.timestamp <= %d " % (self.date_start, self.date_end)
         req+= "RETURN t.tag_id, e.post_id, t.label, e.label, count(t) as strength"
-        result = self.neo4j_graph.run(req)
+        result = query_redisgraph(req)
 
         # Get the posts
         print("Read Posts")
@@ -130,7 +123,7 @@ class CreateTagFocusTlp(object):
         req = "MATCH (t:tag)<-[:REFERS_TO]-(a:annotation)-[:ANNOTATES]->(e: comment) "
         req+= "WHERE e.timestamp >= %d AND e.timestamp <= %d " % (self.date_start, self.date_end)
         req+= "RETURN t.tag_id, e.comment_id, t.label, e.label, count(t) as strength"
-        result = self.neo4j_graph.run(req)
+        result = query_redisgraph(req)
 
         # Get the comments
         print("Read Comments")
@@ -224,5 +217,3 @@ class CreateTagFocusTlp(object):
 
         print("Export")
         tlp.saveGraph(ssg, "%s%s.tlp" % (config['exporter']['tlp_path'], private_gid))
-
-

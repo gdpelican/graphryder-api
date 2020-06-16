@@ -1,7 +1,6 @@
 import uuid
 from flask_restful import Resource
-from neo4j.v1 import SessionError
-from connector import neo4j
+from connector.redisgraph import query_redisgraph
 from routes.utils import addargs, makeResponse
 from graphtulip.createtlp import CreateTlp
 
@@ -11,7 +10,7 @@ class ShortestPathBetweenUsers(Resource):
         req = "MATCH path=shortestPath((u1:user {user_id: %d})-[*..%d]-(u2:user {user_id: %d}))RETURN path" % (
             user1_id, max_hop, user2_id)
         print(req)
-        results = neo4j.query_neo4j(req)
+        results = query_redisgraph(req)
         try:
             result = results.single()
             print(result['path'])

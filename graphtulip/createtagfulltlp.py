@@ -1,5 +1,5 @@
 from tulip import *
-from py2neo import *
+from connector.redisgraph import query_redisgraph
 import configparser
 import os
 from graphtulip.createPostCommentTagTlp import CreatePostCommentTagTlp
@@ -14,13 +14,6 @@ class CreateTagFullTlp(object):
         super(CreateTagFullTlp, self).__init__()
         print('Initializing')
 
-        self.neo4j_graph = Graph(
-            host=config['neo4j']['url'],
-            http_port=int(config['neo4j']['http_port']),
-            bolt_port=int(config['neo4j']['bolt_port']),
-            user=config['neo4j']['user'],
-            password=config['neo4j']['password']
-        )
         self.tulip_graph = tlp.newGraph()
         self.tulip_graph.setName('opencare - tagToTag')
         # todo pass in parameters labels and colors
@@ -168,5 +161,3 @@ class CreateTagFullTlp(object):
 
         print("Export")
         tlp.saveGraph(sg, "%s%s.tlp" % (config['exporter']['tlp_path'], private_gid))
-
-

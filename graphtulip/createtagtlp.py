@@ -1,5 +1,5 @@
 from tulip import *
-from py2neo import *
+from connector.redisgraph import query_redisgraph
 import configparser
 
 config = configparser.ConfigParser()
@@ -12,13 +12,6 @@ class CreateTagTlp(object):
         super(CreateTagTlp, self).__init__()
         print('Initializing')
 
-        self.neo4j_graph = Graph(
-            host=config['neo4j']['url'],
-            http_port=int(config['neo4j']['http_port']),
-            bolt_port=int(config['neo4j']['bolt_port']),
-            user=config['neo4j']['user'],
-            password=config['neo4j']['password']
-        )
         self.tulip_graph = tlp.newGraph()
         self.tulip_graph.setName('opencare - tagToTag')
         # todo pass in parameters labels and colors
@@ -90,7 +83,7 @@ class CreateTagTlp(object):
         indexNodes = {}
 
         req = "MATCH (t1: tag {tag_id: %d}) RETURN ID(t1), t1" % self.tag_id_src
-        result = self.neo4j_graph.run(req)
+        result = query_redisgraph(req)
 
         for qr in result:
             n = self.tulip_graph.addNode()
@@ -103,7 +96,7 @@ class CreateTagTlp(object):
 
         # Prepare node and edge request
         req = "MATCH (t1: tag {tag_id: %d})--(a1: annotation)-[:ANNOTATES]->(e:post)<-[:ANNOTATES]-(a2: annotation)--(t2: tag) WHERE t1 <> t2 RETURN ID(t1), ID(t2), t1, t2, count(t1) as strength" % self.tag_id_src
-        result = self.neo4j_graph.run(req)
+        result = query_redisgraph(req)
 
         # Get the tags
         print("Read Tags")
@@ -117,7 +110,7 @@ class CreateTagTlp(object):
 
         # Get the edges #  RETURN ID(t1), ID(t2), t1, t2, count(t1) as strength
         print("Read Edges")
-        result = self.neo4j_graph.run(req)
+        result = query_redisgraph(req)
         for qr in result:
             if qr[0] in indexNodes and qr[1] in indexNodes:
                 e = self.tulip_graph.addEdge(indexNodes[qr[0]], indexNodes[qr[1]])
@@ -131,5 +124,3 @@ class CreateTagTlp(object):
 
         print("Export")
         tlp.saveGraph(self.tulip_graph, "%s%s.tlp" % (config['exporter']['tlp_path'], private_gid))
-
-

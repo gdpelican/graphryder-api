@@ -1,5 +1,5 @@
 from tulip import *
-from py2neo import *
+from connector.redisgraph import query_redisgraph
 import configparser
 
 config = configparser.ConfigParser()
@@ -12,13 +12,6 @@ class CreateUserTlp(object):
         super(CreateUserTlp, self).__init__()
         print('Initializing')
 
-        self.neo4j_graph = Graph(
-            host=config['neo4j']['url'],
-            http_port=int(config['neo4j']['http_port']),
-            bolt_port=int(config['neo4j']['bolt_port']),
-            user=config['neo4j']['user'],
-            password=config['neo4j']['password']
-        )
         self.tulip_graph = tlp.newGraph()
         self.tulip_graph.setName('opencare')
         # todo pass in parameters labels and colors
@@ -113,7 +106,7 @@ class CreateUserTlp(object):
 
         # Get the users
         print("Read Users")
-        result = self.neo4j_graph.run(nodes_req)
+        result = query_redisgraph(nodes_req)
         for qr in result:
             n = self.tulip_graph.addNode()
             self.managePropertiesEntity(n, qr[1], nodeProperties)
@@ -124,19 +117,19 @@ class CreateUserTlp(object):
 
         #add tag array as node property
         nodeProperties["tagsAssociateNodeTlp"] = self.tulip_graph.getIntegerVectorProperty("tagsAssociateNodeTlp")
-        result = self.neo4j_graph.run(tag_associate_req)
+        result = query_redisgraph(tag_associate_req)
         for qr in result:
             nodeProperties["tagsAssociateNodeTlp"][indexNodes[qr[0]]] = qr[1]
 
         #add post and comment array as node property
         nodeProperties["postsOrCommentsAssociateNodeTlp"] = self.tulip_graph.getIntegerVectorProperty("postsOrCommentsAssociateNodeTlp")
-        result = self.neo4j_graph.run(postOrComment_associate_req)
+        result = query_redisgraph(postOrComment_associate_req)
         for qr in result:
             nodeProperties["postsOrCommentsAssociateNodeTlp"][indexNodes[qr[0]]] = qr[1]
 
         # Get the comments edges
         print("Read Edges")
-        result = self.neo4j_graph.run(comment_edges_req)
+        result = query_redisgraph(comment_edges_req)
         for qr in result:
             if qr[0] in indexNodes and qr[1] in indexNodes:
                 e = self.tulip_graph.addEdge(indexNodes[qr[0]], indexNodes[qr[1]])
@@ -169,7 +162,7 @@ class CreateUserTlp(object):
 
         # Get the response edges
         print("Read Edges")
-        result = self.neo4j_graph.run(resp_edges_req)
+        result = query_redisgraph(resp_edges_req)
         for qr in result:
             if qr[0] in indexNodes and qr[1] in indexNodes:
                 e = self.tulip_graph.addEdge(indexNodes[qr[0]], indexNodes[qr[1]])

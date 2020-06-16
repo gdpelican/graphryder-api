@@ -1,36 +1,35 @@
 from flask_restful import Resource, reqparse
-from neo4j.v1 import SessionError
-from connector import neo4j
+from connector.redisgraph import query_redisgraph
 from routes.utils import addargs, makeResponse
 
 parser = reqparse.RequestParser()
 
 
-class CountAllPost(Resource):
+class CountAllComments(Resource):
     def get(self):
         req = "MATCH (:post) RETURN count(*) AS nb_posts"
-        result = neo4j.query_neo4j(req)
+        result = query_redisgraph(req)
         try:
             return makeResponse(result.single()['nb_posts'], 200)
         except ResultError:
             return makeResponse("ERROR", 500)
 
 
-class CountPostByAuthor(Resource):
+class CountCommentsByAuthor(Resource):
     def get(self, author_id):
-        req = "MATCH (author:user {user_id : %d})-[:AUTHORSHIP]->(:post) RETURN count(*) AS nb_posts" % author_id
-        result = neo4j.query_neo4j(req)
+        req = "MATCH (author:user {id: %d})-[:AUTHORSHIP]->(c:post) RETURN count(*) AS nb_posts" % author_id
+        result = query_redisgraph(req)
         try:
             return makeResponse(result.single()['nb_posts'], 200)
         except ResultError:
             return makeResponse("ERROR", 500)
 
 
-class CountPostsByTimestamp(Resource):
+class CountCommentsByTimestamp(Resource):
     def get(self):
         req = "MATCH (n:post) RETURN n.timestamp AS timestamp ORDER BY timestamp ASC"
         req += addargs()
-        result = neo4j.query_neo4j(req)
+        result = query_redisgraph(req)
         posts = []
         count = 1
         for record in result:

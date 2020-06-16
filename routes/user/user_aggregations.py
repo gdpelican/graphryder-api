@@ -1,6 +1,5 @@
 from flask_restful import Resource, reqparse
-from neo4j.v1 import SessionError
-from connector import neo4j
+from connector.redisgraph import query_redisgraph
 from routes.utils import addargs, makeResponse
 
 parser = reqparse.RequestParser()
@@ -36,7 +35,7 @@ class CountUsersByTimestamp(Resource):
 #        req += "RETURN n.timestamp AS timestamp ORDER BY timestamp ASC"
         req = "MATCH (n: user) -[:AUTHORSHIP]-> (e) "
         req += "RETURN n.user_id, min(e.timestamp) AS timestamp ORDER BY timestamp ASC"
-        result = neo4j.query_neo4j(req)
+        result = query_redisgraph(req)
         users = []
         count = 1
         for record in result:
@@ -54,7 +53,7 @@ class CountUsers(Resource):
     """
     def get(self):
         req = "MATCH (n:user) RETURN count(*) AS nb_users"
-        result = neo4j.query_neo4j(req)
+        result = query_redisgraph(req)
         try:
             return makeResponse(result.single()['nb_users'], 200)
         except ResultError:
