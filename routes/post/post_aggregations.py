@@ -5,7 +5,7 @@ from routes.utils import addargs, makeResponse
 parser = reqparse.RequestParser()
 
 
-class CountAllPost(Resource):
+class CountAllComments(Resource):
     def get(self):
         req = "MATCH (:post) RETURN count(*) AS nb_posts"
         result = query_redisgraph(req)
@@ -15,9 +15,9 @@ class CountAllPost(Resource):
             return makeResponse("ERROR", 500)
 
 
-class CountPostByAuthor(Resource):
+class CountCommentsByAuthor(Resource):
     def get(self, author_id):
-        req = "MATCH (author:user {user_id : %d})-[:AUTHORSHIP]->(:post) RETURN count(*) AS nb_posts" % author_id
+        req = "MATCH (author:user {id: %d})-[:AUTHORSHIP]->(c:post) RETURN count(*) AS nb_posts" % author_id
         result = query_redisgraph(req)
         try:
             return makeResponse(result.single()['nb_posts'], 200)
@@ -25,7 +25,7 @@ class CountPostByAuthor(Resource):
             return makeResponse("ERROR", 500)
 
 
-class CountPostsByTimestamp(Resource):
+class CountCommentsByTimestamp(Resource):
     def get(self):
         req = "MATCH (n:post) RETURN n.timestamp AS timestamp ORDER BY timestamp ASC"
         req += addargs()
